@@ -1,32 +1,33 @@
 import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core'; 
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common'; 
 
 async function bootstrap() {
-
   const app = await NestFactory.create(AppModule);
 
   app.enableCors();
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
+
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   const config = new DocumentBuilder()
-    .setTitle('Wiki API')
-    .setDescription('Документація для аналогу Вікіпедії (ЧДТУ Проєкт)')
+    .setTitle('Warehouse & Wiki API')
+    .setDescription('Документація для системи керування складом та Вікіпедії')
     .setVersion('1.0')
-    .addTag('articles')
-    .addTag('users')
-    .addTag('media')
-    .addBearerAuth()
+    .addBearerAuth() 
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT ?? 3000;
-  await app.listen(port);
-  console.log(`Сервер запущено на: http://localhost:${port}/api`);
+  await app.listen(process.env.PORT ?? 3000);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();

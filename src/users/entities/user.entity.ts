@@ -3,12 +3,12 @@ import { Article } from '../../article/entities/article.entity';
 import { UserRole } from '../enum/UserRole';
 import { IsArray, IsOptional } from 'class-validator';
 import { Media } from '../../media/entities/media.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+  @PrimaryGeneratedColumn('uuid') 
+id: string;
   @Column()
   name: string;
 
@@ -16,6 +16,7 @@ export class User {
   email: string;
 
   @Column()
+  @Exclude({ toPlainOnly: true })
   password: string;
 
   @OneToOne(() => Media, { cascade: true, nullable: true })

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +6,7 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { MediaService } from '../media/media.service';
 import { Media } from '../media/entities/media.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -15,7 +16,7 @@ export class UsersService {
     private mediaService: MediaService,
   ) {}
 
-  async setAvatar(userId: number, avatarData: { url: string; publicId: string }): Promise<User> {
+  async setAvatar(userId: string, avatarData: { url: string; publicId: string }): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['avatar'],
@@ -35,9 +36,20 @@ export class UsersService {
     return await this.userRepository.save(user);
   }
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const userEntity = this.userRepository.create(createUserDto);
-    return await this.userRepository.save(userEntity);
+  async create(createUserDto: CreateUserDto) {
+
+    const existingUser = await this.userRepository.findOneBy({ email: createUserDto.email });
+    if (existingUser) throw new BadRequestException('Користувач з таким email вже існує');
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+    
+    const newUser = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+
+    return await this.userRepository.save(newUser);
   }
 
   async findAll(): Promise<User[]> {
@@ -47,26 +59,29 @@ export class UsersService {
   }
 
   async findOne(email: string): Promise<User | null> {
-    return await this.userRepository.findOneBy({ email });
+    return await this.userRepository.findOne({ 
+      where: { email },
+      relations: ['avatar'] 
+    });
   }
 
   async update(email: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.userRepository.findOneBy({ email });
+    if (!user) throw new NotFoundException('User not found');
 
-    if (!user) {
-      throw new Error('User not found');
+    if (updateUserDto.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, salt);
     }
 
     this.userRepository.merge(user, updateUserDto);
-
     return await this.userRepository.save(user);
   }
 
   async remove(email: string): Promise<void> {
     const user = await this.userRepository.findOneBy({ email });
-    if (!user) {
-      throw new Error('User not found');
-    }
+    if (!user) throw new NotFoundException('User not found');
+    
     await this.userRepository.remove(user);
   }
 }
