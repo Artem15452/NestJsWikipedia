@@ -5,7 +5,7 @@ import {
   IsEnum,
   IsString,
   IsBoolean,
-  IsNumber,
+  IsUUID, // Замінили IsNumber на IsUUID
   ValidateNested,
 } from 'class-validator';
 import { ArticleCategory } from '../enums/category.enum';
@@ -13,9 +13,12 @@ import { Type } from 'class-transformer';
 import { ArticleContentBlockDto } from './ArticleContentDTO';
 
 export class CreateArticleDto {
-  @ApiProperty({ example: 1 })
-  @IsNumber()
-  authorId: number;
+  @ApiProperty({ 
+    example: '550e8400-e29b-41d4-a716-446655440000', 
+    description: 'UUID автора (користувача)' 
+  })
+  @IsUUID() // Тепер NestJS буде перевіряти, чи це коректний UUID
+  authorId: string; // Змінено з number на string
 
   @ApiProperty({ example: 'How to build a NestJS app' })
   @IsString()
@@ -50,7 +53,6 @@ export class CreateArticleDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @ApiProperty({ example: ['Посилання на інших авторів які повязані з цею статтею'] })
   references: string[];
 
   @ApiProperty({ example: true })

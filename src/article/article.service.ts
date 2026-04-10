@@ -25,7 +25,7 @@ export class ArticleService {
     if (!user) throw new NotFoundException('Користувача (автора) не знайдено');
 
     const article = this.articleRepository.create(articleData);
-    
+
     const baseSlug = slugify(article.title, { lower: true, strict: true });
     article.slug = `${baseSlug}-${Date.now()}`;
 
@@ -52,6 +52,7 @@ export class ArticleService {
   }
 
   async findAll(): Promise<Article[]> {
+  
     return await this.articleRepository.find({ 
       relations: ['contributors'],
       order: { id: 'DESC' } 
