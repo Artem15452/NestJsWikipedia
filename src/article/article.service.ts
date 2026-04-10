@@ -22,10 +22,12 @@ export class ArticleService {
     const { authorId, ...articleData } = createArticleDto;
 
     const user = await this.userRepository.findOneBy({ id: authorId });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('Користувача (автора) не знайдено');
 
     const article = this.articleRepository.create(articleData);
-    article.slug = slugify(article.title, { lower: true, strict: true });
+    
+    const baseSlug = slugify(article.title, { lower: true, strict: true });
+    article.slug = `${baseSlug}-${Date.now()}`;
 
     article.contributors = [user];
 
@@ -36,10 +38,8 @@ export class ArticleService {
     const article = await this.findOneBySlug(slug);
 
     if (updateArticleDto.title) {
-      article.slug = slugify(updateArticleDto.title, {
-        lower: true,
-        strict: true,
-      });
+      const baseSlug = slugify(updateArticleDto.title, { lower: true, strict: true });
+      article.slug = `${baseSlug}-${Date.now()}`;
     }
 
     this.articleRepository.merge(article, updateArticleDto);
@@ -52,7 +52,10 @@ export class ArticleService {
   }
 
   async findAll(): Promise<Article[]> {
-    return await this.articleRepository.find({ relations: ['contributors'] });
+    return await this.articleRepository.find({ 
+      relations: ['contributors'],
+      order: { id: 'DESC' } 
+    });
   }
 
   async findOneBySlug(slug: string): Promise<Article> {
@@ -76,25 +79,22 @@ export class ArticleService {
   }
 
   async getCountArticles(): Promise<CountArticlesDto> {
-    const [web, mobile, science, design, security, devops, total] = await Promise.all([
-      this.articleRepository.count({ where: { categories: Like(`%${ArticleCategory.WEB}%`) } }),
-      this.articleRepository.count({ where: { categories: Like(`%${ArticleCategory.MOBILE}%`) } }),
-      this.articleRepository.count({ where: { categories: Like(`%${ArticleCategory.SCIENCE}%`) } }),
-      this.articleRepository.count({ where: { categories: Like(`%${ArticleCategory.DESIGN}%`) } }),
-      this.articleRepository.count({
-        where: { categories: Like(`%${ArticleCategory.SECURITY}%`) },
-      }),
-      this.articleRepository.count({ where: { categories: Like(`%${ArticleCategory.DEVOPS}%`) } }),
-      this.articleRepository.count(),
-    ]);
+    const categories = Object.values(ArticleCategory);
+    const counts = await Promise.all(
+      categories.map(cat => 
+        this.articleRepository.count({ where: { categories: Like(`%${cat}%`) } })
+      )
+    );
+
+    const total = await this.articleRepository.count();
 
     return {
-      webDevelopment: web,
-      mobileApps: mobile,
-      dataScience: science,
-      uxUiDesign: design,
-      cyberSecurity: security,
-      devOps: devops,
+      webDevelopment: counts[categories.indexOf(ArticleCategory.WEB)],
+      mobileApps: counts[categories.indexOf(ArticleCategory.MOBILE)],
+      dataScience: counts[categories.indexOf(ArticleCategory.SCIENCE)],
+      uxUiDesign: counts[categories.indexOf(ArticleCategory.DESIGN)],
+      cyberSecurity: counts[categories.indexOf(ArticleCategory.SECURITY)],
+      devOps: counts[categories.indexOf(ArticleCategory.DEVOPS)],
       totalCount: total,
     };
   }
