@@ -1,12 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { 
+  Controller, Get, Post, Body, Patch, Param, Delete, 
+  UseInterceptors, ClassSerializerInterceptor 
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('users')
 @Controller('users')
+@UseInterceptors(ClassSerializerInterceptor)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -17,12 +21,14 @@ export class UsersController {
   }
 
   @Get()
+  @ApiBearerAuth() 
   @ApiOperation({ summary: 'Отримати список усіх користувачів' })
   async findAll(): Promise<User[]> {
     return await this.usersService.findAll();
   }
 
   @Patch(':id/avatar')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Встановити аватар користувача' })
   @ApiBody({
     schema: {
@@ -32,17 +38,17 @@ export class UsersController {
           type: 'string',
           example: 'https://res.cloudinary.com/dt8opuz2k/image/upload/v1/avatar.jpg',
         },
-        publicId: { type: 'string', example: 'avatars/user_1_abc' },
+        publicId: { type: 'string', example: 'avatars/user_abc' },
       },
       required: ['url', 'publicId'],
     },
   })
-
   async setAvatar(
-    @Param('id') id: string,
+    @Param('id') id: string, 
     @Body() avatarData: { url: string; publicId: string }
   ) {
-    return await this.usersService.setAvatar(+id, avatarData);
+
+    return await this.usersService.setAvatar(id, avatarData);
   }
 
   @Get(':email')
@@ -52,12 +58,14 @@ export class UsersController {
   }
 
   @Patch(':email')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Оновити дані користувача' })
   async update(@Param('email') email: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
     return await this.usersService.update(email, updateUserDto);
   }
 
   @Delete(':email')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Видалити користувача' })
   async remove(@Param('email') email: string) {
     return await this.usersService.remove(email);
