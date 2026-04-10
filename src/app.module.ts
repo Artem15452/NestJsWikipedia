@@ -8,13 +8,10 @@ import { MediaModule } from './media/media.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '5052',
-      database: 'testDb',
+      url: process.env.DATABASE_URL || 'postgres://postgres:5052@localhost:5432/testDb',
       autoLoadEntities: true,
       synchronize: true,
+      ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
     }),
     UsersModule,
     ArticleModule,
