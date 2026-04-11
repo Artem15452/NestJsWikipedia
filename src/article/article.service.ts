@@ -56,6 +56,10 @@ export class ArticleService {
 
   async remove(slug: string): Promise<void> {
     const article = await this.findOneBySlug(slug);
+
+    if(!article) throw new NotFoundException("Невдалося знайти slug");
+
+
     await this.articleRepository.remove(article);
   }
 

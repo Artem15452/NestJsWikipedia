@@ -27,7 +27,7 @@ export class MediaController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadTempFile(@UploadedFile() file: Express.Multer.File) {
 
-    const result = await this.mediaService.updateImage('', file); // Або твій існуючий метод
+    const result = await this.mediaService.updateImage('', file); 
     return {
       url: result.url,
       publicId: result.publicId,

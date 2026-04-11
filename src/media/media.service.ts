@@ -23,6 +23,9 @@ export class MediaService {
 
   async remove(id: number): Promise<void> {
     const media = await this.findById(id);
+
+    if(!media) throw new NotFoundException(`Media not found`);
+
     await this.cloudinaryService.deleteImage(media.publicId);
 
     await this.mediaRepository.remove(media);
@@ -30,6 +33,8 @@ export class MediaService {
 
   async update(id: number, updateMediaDto: UpdateMediaDto): Promise<Media> {
     const media = await this.findById(id);
+
+    if(!media) throw new NotFoundException(`Media not found`);
 
     this.mediaRepository.merge(media, updateMediaDto);
     return await this.mediaRepository.save(media);
