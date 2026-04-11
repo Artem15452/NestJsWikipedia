@@ -8,6 +8,8 @@ import { User } from '../users/entities/user.entity';
 import { Repository, Like } from 'typeorm';
 import slugify from 'slugify';
 import { ArticleCategory } from './enums/category.enum';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 
 @Injectable()
 export class ArticleService {
@@ -57,12 +59,19 @@ export class ArticleService {
     await this.articleRepository.remove(article);
   }
 
-  async findAll(): Promise<Article[]> {
-  
-    return await this.articleRepository.find({ 
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedResponseDto<Article>> {
+    const page = paginationDto.page || 1;
+    const limit = paginationDto.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const [articles, total] = await this.articleRepository.findAndCount({
       relations: ['contributors'],
-      order: { id: 'DESC' } 
+      order: { id: 'DESC' },
+      skip,
+      take: limit,
     });
+
+    return new PaginatedResponseDto(articles, page, limit, total);
   }
 
   async findOneBySlug(slug: string): Promise<Article> {
@@ -77,12 +86,24 @@ export class ArticleService {
     return article;
   }
 
-  async getArticleByEmail(email: string) {
+  async getArticleByEmail(email: string, paginationDto: PaginationDto) {
     const user = await this.userRepository.findOne({
       where: { email },
       relations: ['articles'],
     });
-    return user ? user.articles : [];
+
+    if (!user) {
+      throw new NotFoundException('Користувача не знайдено');
+    }
+
+    const page = paginationDto.page || 1;
+    const limit = paginationDto.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const articles = user.articles.slice(skip, skip + limit);
+    const total = user.articles.length;
+
+    return new PaginatedResponseDto(articles, page, limit, total);
   }
 
   async getCountArticles(): Promise<CountArticlesDto> {

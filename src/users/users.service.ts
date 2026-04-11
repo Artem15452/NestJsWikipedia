@@ -7,6 +7,8 @@ import { Repository } from 'typeorm';
 import { MediaService } from '../media/media.service';
 import { Media } from '../media/entities/media.entity';
 import * as bcrypt from 'bcrypt';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 
 @Injectable()
 export class UsersService {
@@ -52,10 +54,18 @@ export class UsersService {
     return await this.userRepository.save(newUser);
   }
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find({
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedResponseDto<User>> {
+    const page = paginationDto.page || 1;
+    const limit = paginationDto.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await this.userRepository.findAndCount({
       relations: ['avatar'],
+      skip,
+      take: limit,
     });
+
+    return new PaginatedResponseDto(users, page, limit, total);
   }
 
   async findOne(email: string): Promise<User | null> {

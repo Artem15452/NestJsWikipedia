@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('article')
 @Controller('article')
@@ -18,8 +19,10 @@ export class ArticleController {
 
   @Get()
   @ApiOperation({ summary: 'Отримати всі статті' })
-  async findAll(): Promise<Article[]> {
-    return await this.articleService.findAll();
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 20 })
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return await this.articleService.findAll(paginationDto);
   }
 
   @Get('count')
@@ -30,8 +33,13 @@ export class ArticleController {
 
   @Get('getArticlesByUserEmail/:email')
   @ApiOperation({ summary: 'Отримати статті за email автора' })
-  async getArticlesByUserEmail(@Param('email') email: string) {
-    return await this.articleService.getArticleByEmail(email);
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 20 })
+  async getArticlesByUserEmail(
+    @Param('email') email: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return await this.articleService.getArticleByEmail(email, paginationDto);
   }
 
   @Get(':slug')

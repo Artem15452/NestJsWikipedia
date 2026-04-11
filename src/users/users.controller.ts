@@ -1,12 +1,13 @@
 import { 
   Controller, Get, Post, Body, Patch, Param, Delete, 
-  UseInterceptors, ClassSerializerInterceptor 
+  UseInterceptors, ClassSerializerInterceptor, Query 
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -23,8 +24,10 @@ export class UsersController {
   @Get()
   @ApiBearerAuth() 
   @ApiOperation({ summary: 'Отримати список усіх користувачів' })
-  async findAll(): Promise<User[]> {
-    return await this.usersService.findAll();
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 20 })
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return await this.usersService.findAll(paginationDto);
   }
 
   @Patch(':id/avatar')
