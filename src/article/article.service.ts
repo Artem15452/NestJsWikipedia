@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException,BadRequestException } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { CountArticlesDto } from './dto/count-articles.dto';
@@ -23,6 +23,12 @@ export class ArticleService {
 
     const user = await this.userRepository.findOneBy({ id: authorId });
     if (!user) throw new NotFoundException('Користувача (автора) не знайдено');
+
+    const ifArticleExist = await this.articleRepository.findOneBy({title : articleData.title})
+
+    if(ifArticleExist) {
+      throw new BadRequestException("Стаття з такою назвою вже існує");
+    }
 
     const article = this.articleRepository.create(articleData);
 
