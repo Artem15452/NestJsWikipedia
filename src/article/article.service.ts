@@ -58,14 +58,14 @@ export class ArticleService {
     await this.articleRepository.remove(article);
   }
 
- async findAll(
+async findAll(
     paginationDto: PaginationDto, 
     category?: ArticleCategory
   ): Promise<PaginatedResponseDto<Article>> {
-    const page = paginationDto.page || 1;
-    const limit = paginationDto.limit || 10;
+    const page = Number(paginationDto.page) || 1;
+    const limit = Number(paginationDto.limit) || 10;
     const skip = (page - 1) * limit;
-   
+
     const whereCondition = category 
       ? { categories: ILike(`%${category}%`) } 
       : {};
@@ -74,12 +74,13 @@ export class ArticleService {
       where: whereCondition,
       relations: ['contributors'],
       order: { id: 'DESC' },
-      take: limit, 
-      skip: skip,  
+      take: limit,
+      skip: skip,
     });
 
     return new PaginatedResponseDto(articles, page, limit, total);
   }
+
   async findOneBySlug(slug: string): Promise<Article> {
     const article = await this.articleRepository.findOne({
       where: { slug },
@@ -93,27 +94,32 @@ export class ArticleService {
   }
 
   async getArticleByEmail(email: string, paginationDto: PaginationDto) {
-    const user = await this.userRepository.findOne({
-      where: { email },
-      relations: ['articles'],
+    const page = Number(paginationDto.page) || 1;
+    const limit = Number(paginationDto.limit) || 20;
+    const skip = (page - 1) * limit;
+    
+    const [articles, total] = await this.articleRepository.findAndCount({
+      where: {
+        contributors: { email: email }
+      },
+      relations: ['contributors'],
+      take: limit,
+      skip: skip,
+      order: { id: 'DESC' }
     });
 
-    if (!user) {
-      throw new NotFoundException('Користувача не знайдено');
+    if (total === 0) {
+      // Перевіряємо, чи існує взагалі такий юзер, якщо статей немає
+      const user = await this.userRepository.findOneBy({ email });
+      if (!user) throw new NotFoundException('Користувача не знайдено');
     }
-
-    const page = paginationDto.page || 1;
-    const limit = paginationDto.limit || 20;
-    const skip = (page - 1) * limit;
-
-    const articles = user.articles.slice(skip, skip + limit);
-    const total = user.articles.length;
 
     return new PaginatedResponseDto(articles, page, limit, total);
   }
 
   async getCountArticles(): Promise<CountArticlesDto> {
     const categories = Object.values(ArticleCategory);
+  
     const counts = await Promise.all(
       categories.map(cat => 
         this.articleRepository.count({ where: { categories: Like(`%${cat}%`) } })
