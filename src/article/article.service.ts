@@ -58,18 +58,28 @@ export class ArticleService {
     await this.articleRepository.remove(article);
   }
 
-  async findAll(category?: ArticleCategory): Promise<Article[]> {
+ async findAll(
+    paginationDto: PaginationDto, 
+    category?: ArticleCategory
+  ): Promise<PaginatedResponseDto<Article>> {
+    const page = paginationDto.page || 1;
+    const limit = paginationDto.limit || 10;
+    const skip = (page - 1) * limit;
+   
     const whereCondition = category 
       ? { categories: ILike(`%${category}%`) } 
       : {};
 
-    return await this.articleRepository.find({
+    const [articles, total] = await this.articleRepository.findAndCount({
       where: whereCondition,
       relations: ['contributors'],
       order: { id: 'DESC' },
+      take: limit, 
+      skip: skip,  
     });
-  }
 
+    return new PaginatedResponseDto(articles, page, limit, total);
+  }
   async findOneBySlug(slug: string): Promise<Article> {
     const article = await this.articleRepository.findOne({
       where: { slug },
