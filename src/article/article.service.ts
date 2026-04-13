@@ -5,7 +5,7 @@ import { CountArticlesDto } from './dto/count-articles.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './entities/article.entity';
 import { User } from '../users/entities/user.entity';
-import { Repository, Like, ILike } from 'typeorm'; // Додано ILike
+import { Repository, Like, ILike } from 'typeorm';
 import slugify from 'slugify';
 import { ArticleCategory } from './enums/category.enum';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -55,7 +55,6 @@ export class ArticleService {
 
   async remove(slug: string): Promise<void> {
     const article = await this.findOneBySlug(slug);
-    // findOneBySlug вже кидає помилку, якщо не знайдено, тому додаткова перевірка тут не обов'язкова
     await this.articleRepository.remove(article);
   }
 
