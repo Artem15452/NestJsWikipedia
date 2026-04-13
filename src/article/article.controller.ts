@@ -5,6 +5,7 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { ArticleCategory } from './enums/category.enum'; // Додано імпорт
 
 @ApiTags('article')
 @Controller('article')
@@ -18,11 +19,9 @@ export class ArticleController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Отримати всі статті' })
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, example: 20 })
-  async findAll(@Query() paginationDto: PaginationDto) {
-    return await this.articleService.findAll(paginationDto);
+  @ApiOperation({ summary: 'Отримати всі статті або фільтрувати за категорією' })
+  findAll(@Query('category') category?: ArticleCategory) {
+    return this.articleService.findAll(category);
   }
 
   @Get('count')
@@ -62,4 +61,4 @@ export class ArticleController {
   async remove(@Param('slug') slug: string) {
     return await this.articleService.remove(slug);
   }
-}
+} 

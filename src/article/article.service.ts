@@ -1,11 +1,11 @@
-import { Injectable, NotFoundException,BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { CountArticlesDto } from './dto/count-articles.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './entities/article.entity';
 import { User } from '../users/entities/user.entity';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, ILike } from 'typeorm'; // Додано ILike
 import slugify from 'slugify';
 import { ArticleCategory } from './enums/category.enum';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -26,9 +26,8 @@ export class ArticleService {
     const user = await this.userRepository.findOneBy({ id: authorId });
     if (!user) throw new NotFoundException('Користувача (автора) не знайдено');
 
-    const ifArticleExist = await this.articleRepository.findOneBy({title : articleData.title})
-
-    if(ifArticleExist) {
+    const ifArticleExist = await this.articleRepository.findOneBy({ title: articleData.title });
+    if (ifArticleExist) {
       throw new BadRequestException("Стаття з такою назвою вже існує");
     }
 
@@ -56,26 +55,20 @@ export class ArticleService {
 
   async remove(slug: string): Promise<void> {
     const article = await this.findOneBySlug(slug);
-
-    if(!article) throw new NotFoundException("Невдалося знайти slug");
-
-
+    // findOneBySlug вже кидає помилку, якщо не знайдено, тому додаткова перевірка тут не обов'язкова
     await this.articleRepository.remove(article);
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginatedResponseDto<Article>> {
-    const page = paginationDto.page || 1;
-    const limit = paginationDto.limit || 20;
-    const skip = (page - 1) * limit;
+  async findAll(category?: ArticleCategory): Promise<Article[]> {
+    const whereCondition = category 
+      ? { categories: ILike(`%${category}%`) } 
+      : {};
 
-    const [articles, total] = await this.articleRepository.findAndCount({
+    return await this.articleRepository.find({
+      where: whereCondition,
       relations: ['contributors'],
       order: { id: 'DESC' },
-      skip,
-      take: limit,
     });
-
-    return new PaginatedResponseDto(articles, page, limit, total);
   }
 
   async findOneBySlug(slug: string): Promise<Article> {
