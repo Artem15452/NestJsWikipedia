@@ -18,10 +18,13 @@ export class ArticleController {
     return await this.articleService.create(createArticleDto);
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Отримати всі статті або фільтрувати за категорією' })
-  findAll(@Query('category') category?: ArticleCategory) {
-    return this.articleService.findAll(category);
+@Get()
+  @ApiOperation({ summary: 'Отримати всі статті з пагінацією та фільтром' })
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query('category') category?: ArticleCategory
+  ) {
+    return this.articleService.findAll(paginationDto, category);
   }
 
   @Get('count')
