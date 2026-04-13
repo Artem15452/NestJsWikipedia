@@ -33,9 +33,6 @@ export class CreateArticleDto {
   @Type(() => ArticleContentBlockDto)
   content: ArticleContentBlockDto[];
 
-  @ApiProperty({ example: '2026-03-01T12:00:00.000Z' })
-  date: Date;
-
   @ApiProperty({
     example: [ArticleCategory.WEB, ArticleCategory.SECURITY],
     enum: ArticleCategory,
