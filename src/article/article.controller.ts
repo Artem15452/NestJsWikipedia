@@ -19,15 +19,11 @@ export class ArticleController {
   }
 
 @Get()
-  @ApiOperation({ summary: 'Отримати статті з пагінацією та опціональною категорією' })
-  @ApiQuery({ name: 'category', required: false, enum: ArticleCategory, description: 'Категорія статті (опціонально)' })
-  findAll(
-    @Query() paginationDto: PaginationDto,
-    @Query('category') category?: ArticleCategory 
-  ) {
+  @ApiOperation({ summary: 'Отримати статті з пагінацією та фільтром' })
+  findAll(@Query() query: ArticleQueryDto) {
+    const { category, ...paginationDto } = query;
     return this.articleService.findAll(paginationDto, category);
   }
-
   @Get('count')
   @ApiOperation({ summary: 'Отримати статистику статей за категоріями' })
   async getCount() {
