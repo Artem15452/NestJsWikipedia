@@ -5,7 +5,8 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { PaginationDto } from '../common/dto/pagination.dto';
-import { ArticleCategory } from './enums/category.enum'; // Додано імпорт
+import { ArticleCategory } from './enums/category.enum'; 
+import { ArticleQueryDto } from './dto/article-query.dto'; // ОБОВ'ЯЗКОВО ДОДАЙ ЦЕЙ ІМПОРТ
 
 @ApiTags('article')
 @Controller('article')
@@ -18,12 +19,17 @@ export class ArticleController {
     return await this.articleService.create(createArticleDto);
   }
 
-@Get()
+  @Get()
   @ApiOperation({ summary: 'Отримати статті з пагінацією та фільтром' })
+  // Ми використовуємо ArticleQueryDto, який ми створили раніше
   findAll(@Query() query: ArticleQueryDto) {
+    // Деструктуризація: витягуємо категорію, все інше (page, limit) кладемо в paginationDto
     const { category, ...paginationDto } = query;
+    
+    // ПЕРЕДАЄМО ОБИДВА ПАРАМЕТРИ. Це виправить помилку TS2345
     return this.articleService.findAll(paginationDto, category);
   }
+
   @Get('count')
   @ApiOperation({ summary: 'Отримати статистику статей за категоріями' })
   async getCount() {
@@ -61,4 +67,4 @@ export class ArticleController {
   async remove(@Param('slug') slug: string) {
     return await this.articleService.remove(slug);
   }
-} 
+}
