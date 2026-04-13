@@ -20,6 +20,7 @@ export class ArticleController {
 
 @Get()
   @ApiOperation({ summary: 'Отримати статті з пагінацією та опціональною категорією' })
+  @ApiQuery({ name: 'category', required: false, enum: ArticleCategory, description: 'Категорія статті (опціонально)' })
   findAll(
     @Query() paginationDto: PaginationDto,
     @Query('category') category?: ArticleCategory 
