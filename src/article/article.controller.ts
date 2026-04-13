@@ -19,10 +19,10 @@ export class ArticleController {
   }
 
 @Get()
-  @ApiOperation({ summary: 'Отримати всі статті з пагінацією та фільтром' })
+  @ApiOperation({ summary: 'Отримати статті з пагінацією та опціональною категорією' })
   findAll(
     @Query() paginationDto: PaginationDto,
-    @Query('category') category?: ArticleCategory
+    @Query('category') category?: ArticleCategory 
   ) {
     return this.articleService.findAll(paginationDto, category);
   }
