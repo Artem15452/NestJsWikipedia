@@ -1,15 +1,22 @@
-import { Column } from 'typeorm';
-export class CreateMediaDto {
+import { IsString, IsOptional, IsUrl } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
-  @Column()
+export class CreateMediaDto {
+  @ApiProperty({ example: 'https://res.cloudinary.com/...' })
+  @IsUrl({}, { message: 'url має бути валідним посиланням' })
   url: string;
 
-  @Column()
+  @ApiProperty({ example: 'folder/image_id' })
+  @IsString()
   publicId: string;
   
-  @Column()
+  @ApiProperty({ example: 'Верхній підпис (над фото)', required: false })
+  @IsOptional()
+  @IsString()
   description: string;
 
-  @Column()
+  @ApiProperty({ example: 'Нижній підпис (під фото)', required: false })
+  @IsOptional()
+  @IsString()
   title: string;  
 }
