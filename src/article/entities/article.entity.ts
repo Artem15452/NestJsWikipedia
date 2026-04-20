@@ -13,8 +13,8 @@ export class Article {
   @Column({ unique: true })
   slug: string;
 
-  @Column({ type: 'jsonb', nullable: true })
-  content: { type: 'text' | 'header' | 'image'; value: string }[];
+ @Column({ type: 'jsonb', default: [] })
+  content: any[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   date: Date;
