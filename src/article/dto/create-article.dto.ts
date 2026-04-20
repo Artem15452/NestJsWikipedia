@@ -17,16 +17,16 @@ export class CreateArticleDto {
     example: '550e8400-e29b-41d4-a716-446655440000', 
     description: 'UUID автора (користувача)' 
   })
-  @IsUUID() 
+  @IsUUID(4, { message: 'authorId має бути валідним UUID v4' }) 
   authorId: string; 
 
-  @ApiProperty({ example: 'How to build a NestJS app' })
+  @ApiProperty({ example: 'Як побудувати NestJS додаток з нуля' })
   @IsString()
   title: string;
 
   @ApiProperty({
     type: [ArticleContentBlockDto],
-    description: 'Масив блоків: текст, заголовки або зображення',
+    description: 'Масив блоків: текст, заголовки або зображення з підписами',
   })
   @IsArray()
   @ValidateNested({ each: true })
@@ -37,22 +37,27 @@ export class CreateArticleDto {
     example: [ArticleCategory.WEB, ArticleCategory.SECURITY],
     enum: ArticleCategory,
     isArray: true,
+    description: 'Категорії статті'
   })
   @IsArray()
   @IsEnum(ArticleCategory, { each: true })
   categories: ArticleCategory[];
 
   @ApiProperty({
-    example: ['https://google.com'],
+    example: ['https://docs.nestjs.com'],
     required: false,
     isArray: true,
+    description: 'Список джерел та посилань'
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   references: string[];
 
-  @ApiProperty({ example: true })
+  @ApiProperty({ 
+    example: true, 
+    description: 'Статус модерації статті' 
+  })
   @IsBoolean()
   isApproved: boolean;
 }
