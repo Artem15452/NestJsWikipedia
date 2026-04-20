@@ -1,80 +1,49 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString, IsOptional, IsUrl, IsArray, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsEnum, IsString, IsOptional, IsArray } from 'class-validator';
 
 export enum ContentBlockType {
   TEXT = 'text',
-  IMAGE = 'image',
   HEADER = 'header',
-  SLIDER = 'slider', 
-}
-
-export class MediaItemDto {
-  @ApiProperty({ example: 'https://res.cloudinary.com/...' })
-  @IsUrl()
-  url: string;
-
-  @ApiProperty({ example: 'articles/photo_123' })
-  @IsString()
-  publicId: string;
-
-  @ApiProperty({ example: 'Верхній підпис', required: false })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiProperty({ example: 'Нижній підпис', required: false })
-  @IsOptional()
-  @IsString()
-  title?: string;
+  SECTION = 'section', 
+  IMAGE = 'image',
 }
 
 export class ArticleContentBlockDto {
   @ApiProperty({ 
     enum: ContentBlockType, 
-    example: 'text', 
-    description: 'Тип блоку: текст, підзаголовок, зображення або слайдер' 
+    example: 'section', 
+    description: 'Тип блоку контенту' 
   })
   @IsEnum(ContentBlockType)
   type: ContentBlockType;
 
-  @ApiProperty({ 
-    example: 'Це вміст текстового блоку або заголовок розділу', 
-    required: false,
-    description: 'Використовується для типів text та header'
-  })
+  @ApiProperty({ example: 'Простий текст або заголовок', required: false })
   @IsOptional()
   @IsString()
   value?: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsUrl()
-  url?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  publicId?: string;
-
-  @ApiProperty({ required: false })
+  @ApiProperty({ 
+    example: 'Історія створення', 
+    required: false,
+    description: 'Назва абзацу (Header)'
+  })
   @IsOptional()
   @IsString()
-  description?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  title?: string;
+  sectionHeader?: string;
 
   @ApiProperty({ 
-    type: [MediaItemDto], 
+    example: ['Перший абзац тексту', 'Другий абзац тексту'], 
     required: false,
-    description: 'Масив зображень для слайдера (тільки для type: slider)' 
+    description: 'Масив текстів абзацу (Text array)'
   })
   @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => MediaItemDto)
-  images?: MediaItemDto[];
+  @IsString({ each: true })
+  sectionTexts?: string[];
+
+  
+  @IsOptional() @IsString() url?: string;
+  @IsOptional() @IsString() publicId?: string;
+  @IsOptional() @IsString() description?: string;
+  @IsOptional() @IsString() title?: string;
 }
