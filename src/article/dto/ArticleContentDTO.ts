@@ -1,17 +1,39 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString, IsOptional, IsUrl } from 'class-validator';
+import { IsEnum, IsString, IsOptional, IsUrl, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum ContentBlockType {
   TEXT = 'text',
   IMAGE = 'image',
   HEADER = 'header',
+  SLIDER = 'slider', 
+}
+
+export class MediaItemDto {
+  @ApiProperty({ example: 'https://res.cloudinary.com/...' })
+  @IsUrl()
+  url: string;
+
+  @ApiProperty({ example: 'articles/photo_123' })
+  @IsString()
+  publicId: string;
+
+  @ApiProperty({ example: 'Верхній підпис', required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ example: 'Нижній підпис', required: false })
+  @IsOptional()
+  @IsString()
+  title?: string;
 }
 
 export class ArticleContentBlockDto {
   @ApiProperty({ 
     enum: ContentBlockType, 
     example: 'text', 
-    description: 'Тип блоку: текст, підзаголовок або зображення' 
+    description: 'Тип блоку: текст, підзаголовок, зображення або слайдер' 
   })
   @IsEnum(ContentBlockType)
   type: ContentBlockType;
@@ -25,41 +47,34 @@ export class ArticleContentBlockDto {
   @IsString()
   value?: string;
 
-  // --- Поля для зображень (type: image) ---
-
-  @ApiProperty({ 
-    example: 'https://res.cloudinary.com/dt8opuz2k/image/upload/v1.jpg', 
-    required: false,
-    description: 'Пряме посилання на зображення (тільки для type: image)'
-  })
+  @ApiProperty({ required: false })
   @IsOptional()
-  @IsUrl({}, { message: 'Поле url має бути валідним посиланням' })
+  @IsUrl()
   url?: string;
 
-  @ApiProperty({ 
-    example: 'articles/photo_123', 
-    required: false,
-    description: 'ID файлу в Cloudinary (потрібно для видалення/редагування)'
-  })
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   publicId?: string;
 
-  @ApiProperty({ 
-    example: 'Верхній підпис який над фото кароче', 
-    required: false,
-    description: 'Опис, що відображається над зображенням'
-  })
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @ApiProperty({ 
-    example: 'Нижній підпис який з нижче фото кароче', 
-    required: false,
-    description: 'Заголовок, що відображається під зображенням'
-  })
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   title?: string;
+
+  @ApiProperty({ 
+    type: [MediaItemDto], 
+    required: false,
+    description: 'Масив зображень для слайдера (тільки для type: slider)' 
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MediaItemDto)
+  images?: MediaItemDto[];
 }
