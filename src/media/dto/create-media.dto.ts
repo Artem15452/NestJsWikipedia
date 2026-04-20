@@ -9,4 +9,7 @@ export class CreateMediaDto {
   
   @Column()
   description: string;
+
+  @Column()
+  title: string;  
 }
