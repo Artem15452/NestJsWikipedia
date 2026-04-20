@@ -25,6 +25,8 @@ export class ArticleContentBlockDto {
   @IsString()
   value?: string;
 
+  // --- Поля для зображень (type: image) ---
+
   @ApiProperty({ 
     example: 'https://res.cloudinary.com/dt8opuz2k/image/upload/v1.jpg', 
     required: false,
@@ -35,11 +37,29 @@ export class ArticleContentBlockDto {
   url?: string;
 
   @ApiProperty({ 
-    example: 'Підпис під фото: Архітектура NestJS', 
+    example: 'articles/photo_123', 
     required: false,
-    description: 'Опціональний підпис під зображенням'
+    description: 'ID файлу в Cloudinary (потрібно для видалення/редагування)'
   })
   @IsOptional()
   @IsString()
-  caption?: string;
+  publicId?: string;
+
+  @ApiProperty({ 
+    example: 'Верхній підпис який над фото кароче', 
+    required: false,
+    description: 'Опис, що відображається над зображенням'
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ 
+    example: 'Нижній підпис який з нижче фото кароче', 
+    required: false,
+    description: 'Заголовок, що відображається під зображенням'
+  })
+  @IsOptional()
+  @IsString()
+  title?: string;
 }
