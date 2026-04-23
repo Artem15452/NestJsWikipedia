@@ -5,8 +5,8 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { PaginationDto } from '../common/dto/pagination.dto';
-import { ArticleCategory } from './enums/category.enum'; 
-import { ArticleQueryDto } from './dto/article-query.dto'; // ОБОВ'ЯЗКОВО ДОДАЙ ЦЕЙ ІМПОРТ
+import { ArticleCategory } from './enums/category.enum';
+import { ArticleQueryDto } from './dto/article-query.dto';
 
 @ApiTags('article')
 @Controller('article')
@@ -21,12 +21,9 @@ export class ArticleController {
 
   @Get()
   @ApiOperation({ summary: 'Отримати статті з пагінацією та фільтром' })
-  // Ми використовуємо ArticleQueryDto, який ми створили раніше
   findAll(@Query() query: ArticleQueryDto) {
-    // Деструктуризація: витягуємо категорію, все інше (page, limit) кладемо в paginationDto
     const { category, ...paginationDto } = query;
-    
-    // ПЕРЕДАЄМО ОБИДВА ПАРАМЕТРИ. Це виправить помилку TS2345
+
     return this.articleService.findAll(paginationDto, category);
   }
 
@@ -45,6 +42,18 @@ export class ArticleController {
     @Query() paginationDto: PaginationDto,
   ) {
     return await this.articleService.getArticleByEmail(email, paginationDto);
+  }
+
+  @Get('randArticle')
+  @ApiOperation({ summary: 'Отримати випадкову статтю' })
+  async getRandomArticle(): Promise<Article> {
+    return await this.articleService.getOneRandomArticle();
+  }
+
+  @Get('search/live')
+  @ApiOperation({ summary: 'Пошук статей за назвою або слагом (живий пошук)' })
+  async liveSearch(@Query('q') query: string) {
+    return this.articleService.searchArticles(query);
   }
 
   @Get(':slug')

@@ -28,7 +28,7 @@ export class ArticleService {
 
     const ifArticleExist = await this.articleRepository.findOneBy({ title: articleData.title });
     if (ifArticleExist) {
-      throw new BadRequestException("Стаття з такою назвою вже існує");
+      throw new BadRequestException('Стаття з такою назвою вже існує');
     }
 
     const article = this.articleRepository.create(articleData);
@@ -58,17 +58,15 @@ export class ArticleService {
     await this.articleRepository.remove(article);
   }
 
-async findAll(
-    paginationDto: PaginationDto, 
-    category?: ArticleCategory
+  async findAll(
+    paginationDto: PaginationDto,
+    category?: ArticleCategory,
   ): Promise<PaginatedResponseDto<Article>> {
     const page = Number(paginationDto.page) || 1;
     const limit = Number(paginationDto.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const whereCondition = category 
-      ? { categories: ILike(`%${category}%`) } 
-      : {};
+    const whereCondition = category ? { categories: ILike(`%${category}%`) } : {};
 
     const [articles, total] = await this.articleRepository.findAndCount({
       where: whereCondition,
@@ -97,19 +95,18 @@ async findAll(
     const page = Number(paginationDto.page) || 1;
     const limit = Number(paginationDto.limit) || 20;
     const skip = (page - 1) * limit;
-    
+
     const [articles, total] = await this.articleRepository.findAndCount({
       where: {
-        contributors: { email: email }
+        contributors: { email: email },
       },
       relations: ['contributors'],
       take: limit,
       skip: skip,
-      order: { id: 'DESC' }
+      order: { id: 'DESC' },
     });
 
     if (total === 0) {
-      // Перевіряємо, чи існує взагалі такий юзер, якщо статей немає
       const user = await this.userRepository.findOneBy({ email });
       if (!user) throw new NotFoundException('Користувача не знайдено');
     }
@@ -117,13 +114,34 @@ async findAll(
     return new PaginatedResponseDto(articles, page, limit, total);
   }
 
+  async getOneRandomArticle(): Promise<Article> {
+    const article = await this.articleRepository
+      .createQueryBuilder('article')
+      .orderBy('RANDOM()')
+      .leftJoinAndSelect('article.contributors', 'contributor')
+      .getOne();
+
+    if (!article) throw new NotFoundException('Статей не знайдено');
+    return article;
+  }
+
+  async searchArticles(query: string): Promise<Article[]> {
+    if (!query || query.length < 2) return [];
+
+    return await this.articleRepository.find({
+      where: [{ title: ILike(`%${query}%`) }, { slug: ILike(`%${query}%`) }],
+      take: 10,
+      relations: ['contributors'],
+    });
+  }
+
   async getCountArticles(): Promise<CountArticlesDto> {
     const categories = Object.values(ArticleCategory);
-  
+
     const counts = await Promise.all(
-      categories.map(cat => 
-        this.articleRepository.count({ where: { categories: Like(`%${cat}%`) } })
-      )
+      categories.map((cat) =>
+        this.articleRepository.count({ where: { categories: Like(`%${cat}%`) } }),
+      ),
     );
 
     const total = await this.articleRepository.count();
