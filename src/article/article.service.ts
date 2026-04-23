@@ -5,7 +5,7 @@ import { CountArticlesDto } from './dto/count-articles.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './entities/article.entity';
 import { User } from '../users/entities/user.entity';
-import { Repository, Like, ILike } from 'typeorm';
+import { Repository, Like, ILike, Not } from 'typeorm';
 import slugify from 'slugify';
 import { ArticleCategory } from './enums/category.enum';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -129,9 +129,26 @@ export class ArticleService {
     if (!query || query.length < 2) return [];
 
     return await this.articleRepository.find({
-      where: [{ title: ILike(`%${query}%`) }, { slug: ILike(`%${query}%`) }],
+      where: [{ title: ILike(`%${query}%`) }],
       take: 10,
       relations: ['contributors'],
+    });
+  }
+
+  async getRelatedArticles(
+    category: ArticleCategory,
+    currentArticleId: number,
+  ): Promise<Article[]> {
+    return await this.articleRepository.find({
+      where: {
+        categories: Like(`%${category}%`),
+        id: Not(currentArticleId),
+      },
+      relations: ['contributors'],
+      take: 4,
+      order: {
+        date: 'DESC',
+      },
     });
   }
 
