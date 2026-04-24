@@ -22,27 +22,54 @@ export class ArticleService {
 
   async create(createArticleDto: CreateArticleDto): Promise<Article> {
     const { authorId, ...articleData } = createArticleDto;
-
     const user = await this.userRepository.findOneBy({ id: authorId });
-    if (!user) throw new NotFoundException('Користувача (автора) не знайдено');
+    if (!user) throw new NotFoundException('Користувача не знайдено');
 
     const ifArticleExist = await this.articleRepository.findOneBy({ title: articleData.title });
-    if (ifArticleExist) {
-      throw new BadRequestException('Стаття з такою назвою вже існує');
-    }
+    if (ifArticleExist) throw new BadRequestException('Стаття з такою назвою вже існує');
 
     const article = this.articleRepository.create(articleData);
-
     const baseSlug = slugify(article.title, { lower: true, strict: true });
     article.slug = `${baseSlug}-${Date.now()}`;
-
     article.contributors = [user];
 
     return await this.articleRepository.save(article);
   }
 
+  // Внутрішній метод: знайти тільки саму статтю (для update/remove)
+  async findOneEntityBySlug(slug: string): Promise<Article> {
+    const article = await this.articleRepository.findOne({
+      where: { slug },
+      relations: ['contributors'],
+    });
+    if (!article) throw new NotFoundException(`Статтю зі слагом ${slug} не знайдено`);
+    return article;
+  }
+
+  // Метод для фронтенду: Стаття + Схожі
+  async findOneWithRelated(slug: string): Promise<{ article: Article; related: Article[] }> {
+    const article = await this.findOneEntityBySlug(slug);
+
+    const primaryCategory = article.categories?.length > 0 ? article.categories[0] : null;
+    let related: Article[] = [];
+
+    if (primaryCategory) {
+      related = await this.articleRepository.find({
+        where: {
+          categories: Like(`%${primaryCategory}%`),
+          id: Not(article.id),
+        },
+        take: 4,
+        relations: ['contributors'],
+        order: { date: 'DESC' },
+      });
+    }
+
+    return { article, related };
+  }
+
   async update(slug: string, updateArticleDto: UpdateArticleDto): Promise<Article> {
-    const article = await this.findOneBySlug(slug);
+    const article = await this.findOneEntityBySlug(slug); // Використовуємо чисту сутність
 
     if (updateArticleDto.title) {
       const baseSlug = slugify(updateArticleDto.title, { lower: true, strict: true });
@@ -54,7 +81,7 @@ export class ArticleService {
   }
 
   async remove(slug: string): Promise<void> {
-    const article = await this.findOneBySlug(slug);
+    const article = await this.findOneEntityBySlug(slug);
     await this.articleRepository.remove(article);
   }
 
@@ -79,39 +106,13 @@ export class ArticleService {
     return new PaginatedResponseDto(articles, page, limit, total);
   }
 
-  async findOneBySlug(slug: string): Promise<Article> {
-    const article = await this.articleRepository.findOne({
-      where: { slug },
+  async searchArticles(query: string): Promise<Article[]> {
+    if (!query || query.length < 2) return [];
+    return await this.articleRepository.find({
+      where: [{ title: ILike(`%${query}%`) }],
+      take: 10,
       relations: ['contributors'],
     });
-
-    if (!article) {
-      throw new NotFoundException(`Статтю зі слагом ${slug} не знайдено`);
-    }
-    return article;
-  }
-
-  async getArticleByEmail(email: string, paginationDto: PaginationDto) {
-    const page = Number(paginationDto.page) || 1;
-    const limit = Number(paginationDto.limit) || 20;
-    const skip = (page - 1) * limit;
-
-    const [articles, total] = await this.articleRepository.findAndCount({
-      where: {
-        contributors: { email: email },
-      },
-      relations: ['contributors'],
-      take: limit,
-      skip: skip,
-      order: { id: 'DESC' },
-    });
-
-    if (total === 0) {
-      const user = await this.userRepository.findOneBy({ email });
-      if (!user) throw new NotFoundException('Користувача не знайдено');
-    }
-
-    return new PaginatedResponseDto(articles, page, limit, total);
   }
 
   async getOneRandomArticle(): Promise<Article> {
@@ -120,47 +121,17 @@ export class ArticleService {
       .orderBy('RANDOM()')
       .leftJoinAndSelect('article.contributors', 'contributor')
       .getOne();
-
     if (!article) throw new NotFoundException('Статей не знайдено');
     return article;
   }
 
-  async searchArticles(query: string): Promise<Article[]> {
-    if (!query || query.length < 2) return [];
-
-    return await this.articleRepository.find({
-      where: [{ title: ILike(`%${query}%`) }],
-      take: 10,
-      relations: ['contributors'],
-    });
-  }
-
-  async getRelatedArticles(
-    category: ArticleCategory,
-    currentArticleId: number,
-  ): Promise<Article[]> {
-    return await this.articleRepository.find({
-      where: {
-        categories: Like(`%${category}%`),
-        id: Not(currentArticleId),
-      },
-      relations: ['contributors'],
-      take: 4,
-      order: {
-        date: 'DESC',
-      },
-    });
-  }
-
   async getCountArticles(): Promise<CountArticlesDto> {
     const categories = Object.values(ArticleCategory);
-
     const counts = await Promise.all(
       categories.map((cat) =>
         this.articleRepository.count({ where: { categories: Like(`%${cat}%`) } }),
       ),
     );
-
     const total = await this.articleRepository.count();
 
     return {

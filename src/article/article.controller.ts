@@ -23,7 +23,6 @@ export class ArticleController {
   @ApiOperation({ summary: 'Отримати статті з пагінацією та фільтром' })
   findAll(@Query() query: ArticleQueryDto) {
     const { category, ...paginationDto } = query;
-
     return this.articleService.findAll(paginationDto, category);
   }
 
@@ -33,17 +32,6 @@ export class ArticleController {
     return await this.articleService.getCountArticles();
   }
 
-  @Get('getArticlesByUserEmail/:email')
-  @ApiOperation({ summary: 'Отримати статті за email автора' })
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, example: 20 })
-  async getArticlesByUserEmail(
-    @Param('email') email: string,
-    @Query() paginationDto: PaginationDto,
-  ) {
-    return await this.articleService.getArticleByEmail(email, paginationDto);
-  }
-
   @Get('randArticle')
   @ApiOperation({ summary: 'Отримати випадкову статтю' })
   async getRandomArticle(): Promise<Article> {
@@ -51,15 +39,16 @@ export class ArticleController {
   }
 
   @Get('search/live')
-  @ApiOperation({ summary: 'Пошук статей за назвою або слагом (живий пошук)' })
+  @ApiOperation({ summary: 'Пошук статей за назвою (живий пошук)' })
   async liveSearch(@Query('q') query: string) {
     return this.articleService.searchArticles(query);
   }
 
+  // Основний метод для сторінки статті (тепер повертає і статтю, і схожі)
   @Get(':slug')
-  @ApiOperation({ summary: 'Знайти статтю за її унікальним слагом' })
-  async findOne(@Param('slug') slug: string): Promise<Article> {
-    return await this.articleService.findOneBySlug(slug);
+  @ApiOperation({ summary: 'Знайти статтю та схожі матеріали за слагом' })
+  async findOne(@Param('slug') slug: string) {
+    return await this.articleService.findOneWithRelated(slug);
   }
 
   @Patch('update/:slug')
