@@ -9,6 +9,7 @@ import { Media } from '../media/entities/media.entity';
 import * as bcrypt from 'bcrypt';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -37,6 +38,47 @@ export class UsersService {
     user.avatar = newAvatar;
     return await this.userRepository.save(user);
   }
+
+  async register(dto: CreateUserDto) {
+    try {
+      const Email = dto.email.toLowerCase();
+      const existingUser = await this.userRepository.findOne({
+        where : {email: Email},
+      });
+
+      if(existingUser){
+        throw new ConflictException('User already exists');
+      }
+
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+      const newUser = await this.userRepository.create({
+        ...dto,
+        email : Email,
+        password: hashedPassword,
+      });
+      await this.userRepository.save(newUser);
+    } catch(error){
+      if(error instanceof ConflictException){
+        throw error;
+      }
+    }
+  }
+
+  async login(dto: LoginUserDto) {
+    const Email = dto.email.toLowerCase();
+    const user = await this.userRepository.findOne({
+      where: {email: Email}
+    });
+
+    if(!user){
+      throw new NotFoundException('User not found');
+    }
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    if(!isPasswordValid){
+      throw new UnauthorizedException('User does not registration');
+    }
+  }
+
 
   async create(createUserDto: CreateUserDto) {
 

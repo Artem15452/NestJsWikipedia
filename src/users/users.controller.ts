@@ -8,12 +8,24 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 
 @ApiTags('users')
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+  @Post('register')
+  @ApiOperation({ summary: 'Реєстрація нового користувача' })
+  async register(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
+  }
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() dto: LoginUserDto) {
+    return this.usersService.login(dto);
+  }
+
 
   @Post()
   @ApiOperation({ summary: 'Реєстрація нового користувача' })
