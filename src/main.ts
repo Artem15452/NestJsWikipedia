@@ -18,7 +18,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   const config = new DocumentBuilder()
-    .setTitle('Warehouse & Wiki API')
+    .setTitle('Wiki API')
     .setDescription('Документація для системи керування складом та Вікіпедії')
     .setVersion('1.0')
     .addBearerAuth() 

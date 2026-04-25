@@ -36,13 +36,6 @@ export class UsersController {
     return this.usersService.login(dto);
   }
 
-
-  @Post()
-  @ApiOperation({ summary: 'Реєстрація нового користувача' })
-  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return await this.usersService.create(createUserDto);
-  }
-
   @Get()
   @ApiBearerAuth() 
   @ApiOperation({ summary: 'Отримати список усіх користувачів' })
