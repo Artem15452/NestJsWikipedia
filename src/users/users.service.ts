@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -41,7 +47,7 @@ export class UsersService {
 
   async register(dto: CreateUserDto) {
     try {
-      const Email = dto.email.toLowerCase();
+      const Email = dto.email;
       const existingUser = await this.userRepository.findOne({
         where : {email: Email},
       });
@@ -65,7 +71,7 @@ export class UsersService {
   }
 
   async login(dto: LoginUserDto) {
-    const Email = dto.email.toLowerCase();
+    const Email = dto.email;
     const user = await this.userRepository.findOne({
       where: {email: Email}
     });
