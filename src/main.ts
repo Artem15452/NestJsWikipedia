@@ -19,7 +19,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Wiki API')
-    .setDescription('Документація для системи керування складом та Вікіпедії')
+    .setDescription('Документація для Вікіпедії')
     .setVersion('1.0')
     .addBearerAuth() 
     .build();
