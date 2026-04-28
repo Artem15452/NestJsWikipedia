@@ -73,7 +73,8 @@ export class UsersService {
   async login(dto: LoginUserDto) {
     const Email = dto.email;
     const user = await this.userRepository.findOne({
-      where: {email: Email}
+      where: {email: Email},
+       relations: ['avatar'],
     });
 
     if(!user){
