@@ -68,6 +68,8 @@ export class UsersService {
         throw error;
       }
     }
+
+    return await this.userRepository.save(newUser);
   }
 
   async login(dto: LoginUserDto) {
