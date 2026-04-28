@@ -83,6 +83,7 @@ export class UsersService {
     if(!isPasswordValid){
       throw new UnauthorizedException('User does not registration');
     }
+    return user;
   }
 
 
