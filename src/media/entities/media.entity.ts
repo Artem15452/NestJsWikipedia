@@ -13,7 +13,7 @@ export class Media {
   @Column()
   publicId: string;
 
-  @Column()
+  @Column({ nullable: true })
   @IsOptional()
   description: string;
 
