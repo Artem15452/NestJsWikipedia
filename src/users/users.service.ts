@@ -34,7 +34,7 @@ export class UsersService {
     return await this.userRepository.save(newUser);
   }
 
-  async login(dto: any) {
+ async login(dto: any) {
     const email = dto.email.toLowerCase();
 
     const user = await this.userRepository.findOne({
@@ -45,15 +45,14 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    const isPasswordValid = await bcrypt.hash(dto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     return user;
   }
-
   async findOneByEmail(email: string) {
     const user = await this.userRepository.findOne({
       where: { email: email.toLowerCase() },
