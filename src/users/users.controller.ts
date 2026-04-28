@@ -15,8 +15,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
-import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 
@@ -25,62 +24,49 @@ import { LoginUserDto } from './dto/login-user.dto';
 @UseInterceptors(ClassSerializerInterceptor)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
   @Post('register')
   @ApiOperation({ summary: 'Реєстрація нового користувача' })
   async register(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+    return await this.usersService.register(createUserDto);
   }
+
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Авторизація' })
   async login(@Body() dto: LoginUserDto) {
-    return this.usersService.login(dto);
+    return await this.usersService.login(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Отримати список усіх користувачів' })
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, example: 20 })
+  @ApiOperation({ summary: 'Список усіх користувачів з пагінацією' })
   async findAll(@Query() paginationDto: PaginationDto) {
     return await this.usersService.findAll(paginationDto);
   }
 
   @Patch(':id/avatar')
-  @ApiOperation({ summary: 'Встановити аватар користувача' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        url: {
-          type: 'string',
-          example: 'https://res.cloudinary.com/dt8opuz2k/image/upload/v1/avatar.jpg',
-        },
-        publicId: { type: 'string', example: 'avatars/user_abc' },
-      },
-      required: ['url', 'publicId'],
-    },
-  })
+  @ApiOperation({ summary: 'Встановити аватар' })
   async setAvatar(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Body() avatarData: { url: string; publicId: string }
   ) {
-
     return await this.usersService.setAvatar(id, avatarData);
   }
 
   @Get(':email')
-  @ApiOperation({ summary: 'Знайти користувача за email' })
-  async findOne(@Param('email') email: string): Promise<User | null> {
+  @ApiOperation({ summary: 'Пошук за email' })
+  async findOne(@Param('email') email: string) {
     return await this.usersService.findOne(email);
   }
 
   @Patch(':email')
-  @ApiOperation({ summary: 'Оновити дані користувача' })
-  async update(@Param('email') email: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
+  @ApiOperation({ summary: 'Оновлення профілю' })
+  async update(@Param('email') email: string, @Body() updateUserDto: UpdateUserDto) {
     return await this.usersService.update(email, updateUserDto);
   }
 
   @Delete(':email')
-  @ApiOperation({ summary: 'Видалити користувача' })
+  @ApiOperation({ summary: 'Видалення користувача' })
   async remove(@Param('email') email: string) {
     return await this.usersService.remove(email);
   }
