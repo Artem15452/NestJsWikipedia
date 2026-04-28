@@ -21,7 +21,6 @@ async function bootstrap() {
     .setTitle('Wiki API')
     .setDescription('Документація для Вікіпедії')
     .setVersion('1.0')
-    .addBearerAuth() 
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
