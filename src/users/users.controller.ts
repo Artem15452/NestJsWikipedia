@@ -37,7 +37,6 @@ export class UsersController {
   }
 
   @Get()
-  @ApiBearerAuth() 
   @ApiOperation({ summary: 'Отримати список усіх користувачів' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 20 })
@@ -46,7 +45,6 @@ export class UsersController {
   }
 
   @Patch(':id/avatar')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Встановити аватар користувача' })
   @ApiBody({
     schema: {
@@ -76,14 +74,12 @@ export class UsersController {
   }
 
   @Patch(':email')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Оновити дані користувача' })
   async update(@Param('email') email: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
     return await this.usersService.update(email, updateUserDto);
   }
 
   @Delete(':email')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Видалити користувача' })
   async remove(@Param('email') email: string) {
     return await this.usersService.remove(email);
