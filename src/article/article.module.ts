@@ -5,9 +5,10 @@ import { Article } from './entities/article.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
 import { UsersModule } from '../users/users.module';
+import { ArticleHistory } from './entities/article-history.entity';
 
 @Module({
-  imports: [  TypeOrmModule.forFeature([Article, User]), forwardRef(() => UsersModule)],
+  imports: [  TypeOrmModule.forFeature([Article, User, ArticleHistory]), forwardRef(() => UsersModule)],
   controllers: [ArticleController],
   providers: [ArticleService],
   exports: [ArticleService],

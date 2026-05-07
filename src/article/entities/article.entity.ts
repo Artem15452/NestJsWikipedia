@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Media } from '../../media/entities/media.entity';
+import { ArticleHistory } from './article-history.entity';
 
 @Entity('article')
 export class Article {
@@ -34,4 +35,7 @@ export class Article {
   @ManyToMany(() => User, (user) => user.articles)
   @JoinTable()
   contributors: User[];
+
+  @OneToMany(() => ArticleHistory, (history) => history.article, { cascade: true })
+  history: ArticleHistory[];
 }

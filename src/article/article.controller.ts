@@ -44,6 +44,12 @@ export class ArticleController {
     return this.articleService.searchArticles(query);
   }
 
+  @Get(':slug/history')
+  @ApiOperation({ summary: 'Отримати історію редагувань статті' })
+  async getHistory(@Param('slug') slug: string) {
+    return await this.articleService.getArticleHictory(slug);
+  }
+
   // Основний метод для сторінки статті (тепер повертає і статтю, і схожі)
   @Get(':slug')
   @ApiOperation({ summary: 'Знайти статтю та схожі матеріали за слагом' })

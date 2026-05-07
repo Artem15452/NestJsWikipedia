@@ -10,6 +10,8 @@ import slugify from 'slugify';
 import { ArticleCategory } from './enums/category.enum';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
+import { ArticleHistory } from './entities/article-history.entity';
+
 
 @Injectable()
 export class ArticleService {
@@ -18,6 +20,8 @@ export class ArticleService {
     private readonly articleRepository: Repository<Article>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(ArticleHistory)
+    private readonly historyRepository: Repository<ArticleHistory>,
   ) {}
 
   async create(createArticleDto: CreateArticleDto): Promise<Article> {
@@ -71,12 +75,27 @@ export class ArticleService {
   async update(slug: string, updateArticleDto: UpdateArticleDto): Promise<Article> {
     const article = await this.findOneEntityBySlug(slug); // Використовуємо чисту сутність
 
-    if (updateArticleDto.title) {
+    const historyRecord = this.historyRepository.create({
+      article: article,
+      title: article.title,
+      content: article.content,
+      categories: article.categories,
+    });
+
+    if (updateArticleDto.editorId) {
+      const editor = await this.userRepository.findOneBy({ id: updateArticleDto.editorId });
+      if (editor) {
+        historyRecord.editor = editor;
+      }
+    }
+    await this.historyRepository.save(historyRecord);
+
+    if (updateArticleDto.title && updateArticleDto.title !== article.title) {
       const baseSlug = slugify(updateArticleDto.title, { lower: true, strict: true });
       article.slug = `${baseSlug}-${Date.now()}`;
     }
-
-    this.articleRepository.merge(article, updateArticleDto);
+    const { editorId, ...updateData } = updateArticleDto;
+    this.articleRepository.merge(article, updateData as any);
     return await this.articleRepository.save(article);
   }
 
@@ -123,6 +142,14 @@ export class ArticleService {
       .getOne();
     if (!article) throw new NotFoundException('Статей не знайдено');
     return article;
+  }
+  async getArticleHictory(slug: string): Promise<ArticleHistory[]> {
+    const article = await this.findOneEntityBySlug(slug);
+    return await this.historyRepository.find({
+      where: { article: { id: article.id } },
+      relations: ['editor'],
+      order: { editedAt: 'DESC' },
+    });
   }
 
   async getCountArticles(): Promise<CountArticlesDto> {
