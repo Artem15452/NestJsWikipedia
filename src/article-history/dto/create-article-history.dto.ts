@@ -11,8 +11,9 @@ export class CreateArticleHistoryDto {
   @IsOptional()
   contentAfter?: any;
 
+  @IsOptional()
   @IsUUID(4)
-  userId!: string;
+  userId?: string;
 
   @IsOptional()
   titleBefore?: string;

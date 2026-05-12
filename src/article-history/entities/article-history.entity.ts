@@ -22,8 +22,8 @@ export class ArticleHistory {
   @Column({ nullable: true })
   titleAfter!: string;
 
-  @ManyToOne(() => User)
-  redactedBy!: User;
+  @ManyToOne(() => User, { nullable: true })
+  redactedBy?: User | null;
 
   @CreateDateColumn()
   dataRedaction!: Date;

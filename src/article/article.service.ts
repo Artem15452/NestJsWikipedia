@@ -128,19 +128,17 @@ export class ArticleService {
     this.articleRepository.merge(article, articleData);
     const savedArticle = await this.articleRepository.save(article);
 
-    if (editorId) {
-      try {
-        await this.historyService.create({
-          articleId: savedArticle.id,
-          userId: editorId,
-          contentBefore: previousSnapshot,
-          contentAfter: this.buildArticleSnapshot(savedArticle),
-          titleBefore: previousSnapshot.title,
-          titleAfter: savedArticle.title,
-        });
-      } catch (error) {
-        console.error('Не вдалося зберегти історію редагування:', error);
-      }
+    try {
+      await this.historyService.create({
+        articleId: savedArticle.id,
+        userId: editorId,
+        contentBefore: previousSnapshot,
+        contentAfter: this.buildArticleSnapshot(savedArticle),
+        titleBefore: previousSnapshot.title,
+        titleAfter: savedArticle.title,
+      });
+    } catch (error) {
+      console.error('Не вдалося зберегти історію редагування:', error);
     }
 
     return await this.findOneEntityBySlug(savedArticle.slug);
