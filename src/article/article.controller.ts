@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -44,11 +54,25 @@ export class ArticleController {
     return this.articleService.searchArticles(query);
   }
 
-  // Основний метод для сторінки статті (тепер повертає і статтю, і схожі)
   @Get(':slug')
   @ApiOperation({ summary: 'Знайти статтю та схожі матеріали за слагом' })
   async findOne(@Param('slug') slug: string) {
     return await this.articleService.findOneWithRelated(slug);
+  }
+
+  @Get(':slug/history')
+  @ApiOperation({ summary: 'Отримати історію редагувань статті' })
+  async findHistory(@Param('slug') slug: string) {
+    return await this.articleService.findHistoryBySlug(slug);
+  }
+
+  @Get(':slug/history/:historyId')
+  @ApiOperation({ summary: 'Отримати конкретну версію статті' })
+  async findHistoryVersion(
+    @Param('slug') slug: string,
+    @Param('historyId', ParseIntPipe) historyId: number,
+  ) {
+    return await this.articleService.findHistoryVersionBySlug(slug, historyId);
   }
 
   @Patch('update/:slug')
