@@ -9,10 +9,22 @@ import { ArticleHistoryModule } from './article-history/article-history.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DATABASE_URL || 'postgres://postgres:5052@localhost:5432/testDb',
+      replication: {
+        master: {
+          url: process.env.DATABASE_URL_PRIMARY || 'postgres://postgres:5052@localhost:5432/testDb',
+          ssl: process.env.DATABASE_URL_PRIMARY ? { rejectUnauthorized: false } : false,
+        },
+        slaves: [
+          {
+            url:
+              process.env.DATABASE_URL_RESERVE ||
+              'postgres://postgres:5052@localhost:5432/testDb_replica',
+            ssl: process.env.DATABASE_URL_RESERVE ? { rejectUnauthorized: false } : false,
+          },
+        ],
+      },
       autoLoadEntities: true,
       synchronize: true,
-      ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
     }),
     UsersModule,
     ArticleModule,

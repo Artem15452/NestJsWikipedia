@@ -17,9 +17,9 @@ export class Media {
   @IsOptional()
   description: string;
 
-  @ManyToOne(() => Article, (article) => article.media, { 
-    onDelete: 'CASCADE', 
-    nullable: true 
+  @ManyToOne(() => Article, (article) => article.media, {
+    onDelete: 'CASCADE',
+    nullable: true,
   })
   article: Article;
 }
